@@ -13,19 +13,25 @@ export class S3Controller {
     return this.s3Service.createBucket(name);
   }
 
-  // 2. Check if a bucket exists
+  // 2. Delete a bucket
+  @Delete('bucket')
+  async deleteBucket(@Query('name') name: string) {
+    return this.s3Service.deleteBucket(name);
+  }
+
+  // 3. Check if a bucket exists
   @Get('bucket')
   async checkBucket(@Query('name') name: string) {
     return this.s3Service.checkBucket(name);
   }
 
-  // 3. Delete a file from bucket
+  // 4. Delete a file from bucket
   @Delete('file')
   async deleteFile(@Query('path') path: string) {
     return this.s3Service.deleteFile(path);
   }
 
-  // 4. Get a file stream (for download)
+  // 5. Get a file stream (for download)
   @Get('stream')
   async getStream(@Query('path') path: string, @Res() res: Response) {
     const stream = await this.s3Service.getObjectStream(path);
@@ -34,7 +40,7 @@ export class S3Controller {
     stream.pipe(res);
   }
 
-  // 5. Download file to local system (server-side only)
+  // 6. Download file to local system (server-side only)
   @Post('download')
   async downloadFile(
     @Query('bucket') bucket: string,
@@ -43,7 +49,7 @@ export class S3Controller {
     return this.s3Service.downloadFromBucket(bucket, fileName);
   }
 
-  // 6. Upload file via buffer (from form (form-data))
+  // 7. Upload file via buffer (from form (form-data))
   @Post('upload')
   @UseInterceptors(FileInterceptor('file'))
   async uploadFile(
@@ -53,7 +59,7 @@ export class S3Controller {
     return this.s3Service.putToBucket(file, bucket);
   }
 
-  // 7. Upload from file path on disk
+  // 8. Upload from file path on disk
   @Post('fupload')
   async uploadFromPath(
     @Body() body: { filePath: string; bucket: string },
@@ -61,7 +67,7 @@ export class S3Controller {
     return this.s3Service.fPutToBucket(body.filePath, body.bucket);
   }
 
-  // 8. Generate signed URL for upload
+  // 9. Generate signed URL for upload
   @Get('signed-url')
   async signedUrl(
     @Query('bucket') bucket: string,
@@ -73,13 +79,13 @@ export class S3Controller {
     );
   }
 
-  // 9. Initiate multipart upload
+  // 10. Initiate multipart upload
   @Get('multipart/initiate')
   async initiateMultipart(@Query('bucket') bucket: string) {
     return this.s3Service.initiateVideoMultipartUpload(bucket);
   }
 
-  // 10. Get uploaded parts (for multipart)
+  // 11. Get uploaded parts (for multipart)
   @Get('multipart/parts')
   async listParts(
     @Query('bucket') bucket: string,
@@ -89,7 +95,7 @@ export class S3Controller {
     return this.s3Service.getUploadedParts(bucket, uploadId, key);
   }
 
-  // 11. Generate signed URL for chunk upload
+  // 12. Generate signed URL for chunk upload
   @Get('multipart/signed-url')
   async signedUrlForChunk(
     @Query('bucket') bucket: string,
@@ -105,7 +111,7 @@ export class S3Controller {
     );
   }
 
-  // 12. Complete multipart upload
+  // 13. Complete multipart upload
   @Post('multipart/complete')
   async completeMultipart(
     @Body()
@@ -124,7 +130,7 @@ export class S3Controller {
     );
   }
 
-  // 13. Merge video chunks (not implemented)
+  // 14. Merge video chunks (not implemented)
   @Post('merge')
   async mergeChunks(
     @Body() body: { bucket: string; files: string[] },

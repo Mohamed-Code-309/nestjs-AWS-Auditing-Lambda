@@ -1,4 +1,4 @@
-import { HttpException, HttpStatus, Injectable, Logger } from '@nestjs/common';
+import { ConflictException, HttpException, HttpStatus, Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { IAbstractStorage } from 'src/abstract.storage';
 import { Readable } from 'stream';
 import {
@@ -12,6 +12,7 @@ import {
   UploadPartCommand,
   CompleteMultipartUploadCommand,
   ListPartsCommand,
+  DeleteBucketCommand,
 } from '@aws-sdk/client-s3';
 import * as fs from 'fs';
 import * as path from 'path';
@@ -45,6 +46,32 @@ export class S3Service implements IAbstractStorage {
   async createBucket(bucketName: string): Promise<void> {
     await this.s3Client.send(new CreateBucketCommand({ Bucket: bucketName }));
     this.logger.log(`Bucket <<${bucketName}>> created`);
+  }
+
+  async deleteBucket(bucketName: string): Promise<void> {
+    try {
+      await this.s3Client.send(
+        new DeleteBucketCommand({
+          Bucket: bucketName,
+        }),
+      );
+      this.logger.log(`Bucket <<${bucketName}>> deleted`);
+    } catch (error) {
+
+      if (error.name === 'NoSuchBucket') {
+        throw new NotFoundException(
+          `Bucket <<${bucketName}>> does not exist`,
+        );
+      }
+      
+      if (error.name === 'BucketNotEmpty') {
+        throw new ConflictException(
+          `Bucket <<${bucketName}>> is not empty`,
+        );
+      }
+      
+      throw error;
+    }
   }
 
   async checkBucket(bucketName: string): Promise<boolean> {
